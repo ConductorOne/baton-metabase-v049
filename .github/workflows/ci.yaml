@@ -65,25 +65,12 @@ jobs:
             -e MB_DB_FILE=/metabase.db \
             -v metabase-data-ci:/metabase.db \
             metabase/metabase:v0.49.2
+          sleep 150
 
       - name: Create CI Admin user
         id: ci_admin
         run: |
-          timeout=150
-          while [ $timeout -gt 0 ]; do
-            SETUP_TOKEN=$(curl -s $BATON_METABASE_BASE_URL/api/session/properties | jq -r '.["setup-token"]')
-            if [ -n "$SETUP_TOKEN" ] && [ "$SETUP_TOKEN" != "null" ]; then
-              break
-            fi
-            sleep 2
-            timeout=$((timeout-2))
-          done
-      
-          if [ -z "$SETUP_TOKEN" ] || [ "$SETUP_TOKEN" = "null" ]; then
-            echo "Metabase did not start in time"
-            exit 1
-          fi
-          
+          SETUP_TOKEN=$(curl -s $BATON_METABASE_BASE_URL/api/session/properties | jq -r '.["setup-token"]')
           curl -s -X POST $BATON_METABASE_BASE_URL/api/setup \
             -H "Content-Type: application/json" \
             -d '{
