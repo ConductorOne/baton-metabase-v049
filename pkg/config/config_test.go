@@ -14,16 +14,17 @@ func TestValidateConfig(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "valid config",
+			name: "valid config",
 			config: &MetabaseV049{
-				// TODO: Add minimal valid configuration here once Config type is generated
+				MetabaseApiKey:  "some-api-key",
+				MetabaseBaseUrl: "https://metabase-example",
 			},
 			wantErr: false,
 		},
 		{
-			name:   "invalid config - missing required fields",
+			name: "invalid config - missing required fields",
 			config: &MetabaseV049{
-				// TODO: Add configuration with missing required fields once Config type is generated
+				MetabaseApiKey: "some-api-key",
 			},
 			wantErr: true,
 		},

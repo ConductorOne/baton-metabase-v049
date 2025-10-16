@@ -159,6 +159,11 @@ github.com/benbjohnson/clock
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
+# github.com/conductorone/baton-metabase v0.0.3
+## explicit; go 1.25
+github.com/conductorone/baton-metabase/pkg/client
+github.com/conductorone/baton-metabase/pkg/config
+github.com/conductorone/baton-metabase/pkg/connector
 # github.com/conductorone/baton-sdk v0.4.10
 ## explicit; go 1.25.2
 github.com/conductorone/baton-sdk/internal/connector
@@ -454,6 +459,7 @@ github.com/spf13/viper/internal/features
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
+github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv

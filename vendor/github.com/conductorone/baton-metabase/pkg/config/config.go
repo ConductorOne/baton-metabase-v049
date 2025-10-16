@@ -35,7 +35,7 @@ var (
 
 //go:generate go run ./gen
 var Config = field.NewConfiguration(ConfigurationFields,
-	field.WithConnectorDisplayName("Metabase-v049"),
-	field.WithHelpUrl("/docs/baton/metabase-v049"),
+	field.WithConnectorDisplayName("Metabase"),
+	field.WithHelpUrl("/docs/baton/metabase"),
 	field.WithIconUrl("/static/app-icons/metabase.svg"),
 )
