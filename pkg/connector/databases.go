@@ -35,7 +35,7 @@ func (d *databaseBuilder) List(ctx context.Context, _ *v2.ResourceId, _ *paginat
 		ann.WithRateLimiting(rateLimitDesc)
 	}
 	if err != nil {
-		return nil, "", ann, fmt.Errorf("failed to list databases: %w", err)
+		return nil, "", ann, err
 	}
 
 	outResources := make([]*v2.Resource, 0, len(databases))
@@ -83,7 +83,7 @@ func (d *databaseBuilder) Grants(ctx context.Context, resource *v2.Resource, _ *
 		ann.WithRateLimiting(rateLimitDesc)
 	}
 	if err != nil {
-		return nil, "", ann, fmt.Errorf("failed to list database permissions: %w", err)
+		return nil, "", ann, err
 	}
 
 	var grants []*v2.Grant

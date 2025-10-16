@@ -58,7 +58,7 @@ func TestDatabasesList(t *testing.T) {
 
 		_, _, _, err := dbBuilder.List(ctx, nil, &pagination.Token{})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to list databases: API error")
+		require.Contains(t, err.Error(), "API error")
 	})
 }
 
@@ -130,6 +130,6 @@ func TestDatabasesGrants(t *testing.T) {
 
 		_, _, _, err := dbBuilder.Grants(ctx, dbResource, &pagination.Token{})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to list database permissions: API error")
+		require.Contains(t, err.Error(), "API error")
 	})
 }
