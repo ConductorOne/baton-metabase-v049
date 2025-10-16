@@ -69,7 +69,7 @@ jobs:
       - name: Create CI Admin user
         id: ci_admin
         run: |
-          timeout=60
+          timeout=150
           while [ $timeout -gt 0 ]; do
             SETUP_TOKEN=$(curl -s $BATON_METABASE_BASE_URL/api/session/properties | jq -r '.["setup-token"]')
             if [ -n "$SETUP_TOKEN" ] && [ "$SETUP_TOKEN" != "null" ]; then
