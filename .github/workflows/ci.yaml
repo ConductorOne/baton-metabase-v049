@@ -114,8 +114,8 @@ jobs:
       - name: Export API key as env var
         run: echo "BATON_METABASE_API_KEY=${{ steps.api_key.outputs.api_key }}" >> $GITHUB_ENV
 
-      - name: Build baton-metabase
-        run: go build ./cmd/baton-metabase
+      - name: Build baton-metabase-049
+        run: go build ./cmd/baton-metabase-v049
 
       - name: Create test group
         id: create_group
@@ -156,7 +156,7 @@ jobs:
       - name: Test syncing
         uses: ConductorOne/github-workflows/actions/sync-test@v2
         with:
-          connector: ./baton-metabase
+          connector: ./baton-metabase-v049
           baton-entitlement: group:${{steps.create_group.outputs.group_id}}:member
           baton-principal: ${{steps.test_user.outputs.user_id}}
           baton-principal-type: 'user'
