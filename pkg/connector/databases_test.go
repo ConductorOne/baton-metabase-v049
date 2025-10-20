@@ -114,17 +114,17 @@ func TestDatabasesGrants(t *testing.T) {
 		for _, g := range grants {
 			switch g.Principal.Id.Resource {
 			case "group3":
-				if strings.Contains(g.Entitlement.Id, "access") {
+				if strings.Contains(g.Entitlement.Id, accessPermission) {
 					g3Access = true
 				}
-				if strings.Contains(g.Entitlement.Id, "write") {
+				if strings.Contains(g.Entitlement.Id, writePermission) {
 					g3Write = true
 				}
 			case "group4":
-				if strings.Contains(g.Entitlement.Id, "access") {
+				if strings.Contains(g.Entitlement.Id, accessPermission) {
 					g4Access = true
 				}
-				if strings.Contains(g.Entitlement.Id, "write") {
+				if strings.Contains(g.Entitlement.Id, writePermission) {
 					g4Write = true
 				}
 			}

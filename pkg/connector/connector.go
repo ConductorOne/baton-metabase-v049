@@ -42,8 +42,8 @@ func (d *Connector) Asset(_ context.Context, _ *v2.AssetRef) (string, io.ReadClo
 // Metadata returns metadata about the connector.
 func (d *Connector) Metadata(_ context.Context) (*v2.ConnectorMetadata, error) {
 	return &v2.ConnectorMetadata{
-		DisplayName: "Metabase v0-49",
-		Description: "Metabase connector v0-49 to sync users, groups and databases",
+		DisplayName: "Metabase-v049",
+		Description: "Metabase connector v049 to sync users, groups and databases",
 	}, nil
 }
 

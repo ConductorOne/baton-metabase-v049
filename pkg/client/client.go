@@ -167,7 +167,7 @@ func (c *MetabaseV049Client) ListDatabases(ctx context.Context) ([]*Database, *v
 
 	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &dbResponse, nil)
 	if err != nil {
-		return nil, rateLimitDesc, fmt.Errorf("failed to fetch memberships databases: %w", err)
+		return nil, rateLimitDesc, fmt.Errorf("failed to fetch databases: %w", err)
 	}
 
 	return dbResponse.Data, rateLimitDesc, nil
