@@ -20,10 +20,18 @@ var (
 		field.WithDisplayName("API Key"),
 	)
 
+	MetabaseWithPaidPlan = field.BoolField(
+		"metabase-with-paid-plan",
+		field.WithDescription("Set to true if using Metabase paid plan, false for Open Source / self-hosted (free)"),
+		field.WithDisplayName("Metabase with paid plan"),
+		field.WithDefaultValue(false),
+	)
+
 	// ConfigurationFields defines the external configuration required for the connector to run.
 	ConfigurationFields = []field.SchemaField{
 		MetabaseBaseUrl,
 		MetabaseApiKey,
+		MetabaseWithPaidPlan,
 	}
 
 	// FieldRelationships defines relationships between the fields listed in
@@ -36,6 +44,6 @@ var (
 //go:generate go run ./gen
 var Config = field.NewConfiguration(ConfigurationFields,
 	field.WithConnectorDisplayName("Metabase-v049"),
-	field.WithHelpUrl("/docs/baton/metabase-v049"),
+	field.WithHelpUrl("/docs/baton/metabase"),
 	field.WithIconUrl("/static/app-icons/metabase.svg"),
 )

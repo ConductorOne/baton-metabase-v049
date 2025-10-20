@@ -36,12 +36,13 @@ const (
 )
 
 type MetabaseClient struct {
-	client  *uhttp.BaseHttpClient
-	baseURL *url.URL
-	apiKey  string
+	client     *uhttp.BaseHttpClient
+	baseURL    *url.URL
+	apiKey     string
+	isPaidPlan bool
 }
 
-func New(ctx context.Context, rawBaseURL string, apiKey string) (*MetabaseClient, error) {
+func New(ctx context.Context, rawBaseURL string, apiKey string, isPaidPlan bool) (*MetabaseClient, error) {
 	client, err := uhttp.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -58,9 +59,10 @@ func New(ctx context.Context, rawBaseURL string, apiKey string) (*MetabaseClient
 	}
 
 	return &MetabaseClient{
-		client:  httpClient,
-		baseURL: baseURL,
-		apiKey:  apiKey,
+		client:     httpClient,
+		baseURL:    baseURL,
+		apiKey:     apiKey,
+		isPaidPlan: isPaidPlan,
 	}, nil
 }
 
@@ -180,4 +182,8 @@ func (c *MetabaseClient) GetVersion(ctx context.Context) (*VersionInfo, *v2.Rate
 	}
 
 	return &utilInfo, rateLimitDesc, nil
+}
+
+func (c *MetabaseClient) IsPaidPlan() bool {
+	return c.isPaidPlan
 }

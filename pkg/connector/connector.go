@@ -9,7 +9,6 @@ import (
 
 	"github.com/conductorone/baton-metabase-v049/pkg/client"
 	cfg "github.com/conductorone/baton-metabase-v049/pkg/config"
-	baseClient "github.com/conductorone/baton-metabase/pkg/client"
 	baseConfig "github.com/conductorone/baton-metabase/pkg/config"
 	baseConnector "github.com/conductorone/baton-metabase/pkg/connector"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -21,7 +20,6 @@ import (
 
 type Connector struct {
 	vBaseConnector *baseConnector.Connector
-	vBaseClient    *baseClient.MetabaseClient
 	v049Client     *client.MetabaseV049Client
 }
 
@@ -55,7 +53,7 @@ func (d *Connector) Validate(ctx context.Context) (annotations.Annotations, erro
 	l := ctxzap.Extract(ctx)
 	ann := annotations.New()
 
-	versionResp, rateLimitDesc, err := d.vBaseClient.GetVersion(ctx)
+	versionResp, rateLimitDesc, err := d.v049Client.GetVersion(ctx)
 	if rateLimitDesc != nil {
 		ann.WithRateLimiting(rateLimitDesc)
 	}
@@ -92,8 +90,9 @@ func New(ctx context.Context, config *cfg.MetabaseV049) (*Connector, error) {
 	l := ctxzap.Extract(ctx)
 
 	baseCfg := &baseConfig.Metabase{
-		MetabaseBaseUrl: config.MetabaseBaseUrl,
-		MetabaseApiKey:  config.MetabaseApiKey,
+		MetabaseBaseUrl:      config.MetabaseBaseUrl,
+		MetabaseApiKey:       config.MetabaseApiKey,
+		MetabaseWithPaidPlan: config.MetabaseWithPaidPlan,
 	}
 
 	vBaseConnector, err := baseConnector.New(ctx, baseCfg)
@@ -102,21 +101,14 @@ func New(ctx context.Context, config *cfg.MetabaseV049) (*Connector, error) {
 		return nil, err
 	}
 
-	v049Client, err := client.NewV049Client(ctx, config.MetabaseBaseUrl, config.MetabaseApiKey)
+	v049Client, err := client.NewV049Client(ctx, config.MetabaseBaseUrl, config.MetabaseApiKey, config.MetabaseWithPaidPlan)
 	if err != nil {
 		l.Error("failed to create extended Metabase v0.49 client", zap.Error(err))
 		return nil, err
 	}
 
-	vBaseClient, err := baseClient.New(ctx, config.MetabaseBaseUrl, config.MetabaseApiKey)
-	if err != nil {
-		l.Error("failed to create base Metabase client", zap.Error(err))
-		return nil, err
-	}
-
 	return &Connector{
 		vBaseConnector: vBaseConnector,
-		vBaseClient:    vBaseClient,
 		v049Client:     v049Client,
 	}, nil
 }

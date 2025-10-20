@@ -49,7 +49,7 @@ func (d *Connector) Validate(_ context.Context) (annotations.Annotations, error)
 func New(ctx context.Context, config *cfg.Metabase) (*Connector, error) {
 	l := ctxzap.Extract(ctx)
 
-	metabaseClient, err := client.New(ctx, config.MetabaseBaseUrl, config.MetabaseApiKey)
+	metabaseClient, err := client.New(ctx, config.MetabaseBaseUrl, config.MetabaseApiKey, config.MetabaseWithPaidPlan)
 	if err != nil {
 		l.Error("error creating metabase client", zap.Error(err))
 		return nil, err

@@ -22,20 +22,55 @@ const (
 	// The permissions required for these endpoints to function correctly are determined by the group (administrators) attached to the creation of the API Key.
 	// For more information, please refer to docs-info.md or README.md.
 
+	// https://www.metabase.com/docs/latest/api#tag/apisetting/get/api/setting/{key}
+	getVersion = "/api/setting/version"
+
 	// https://www.metabase.com/docs/latest/api#tag/apidatabase/post/api/database/
 	getDatabases = "/api/database"
 
 	// https://www.metabase.com/docs/latest/api#tag/apipermissions/get/api/permissions/graph/db/{db-id}
 	getDBPermissions = "/api/permissions/graph/db/%s"
+	// Example JSON response version 0.49:
+	/*
+	   {
+	       "revision": 13,
+	       "groups": {
+	           "1": {
+	               "3": {
+	                   "download": {
+	                       "native": "full",
+	                       "schemas": "full"
+	                   }
+	               }
+	           },
+	           "3": {
+	               "3": {
+	                   "data": {
+	                       "schemas": "all",
+	                       "native": "write"
+	                   }
+	               }
+	           },
+	           "4": {
+	               "3": {
+	                   "data": {
+	                       "schemas": "all"
+	                   }
+	               }
+	           }
+	       }
+	   }
+	*/
 )
 
 type MetabaseV049Client struct {
-	client  *uhttp.BaseHttpClient
-	baseURL *url.URL
-	apiKey  string
+	client     *uhttp.BaseHttpClient
+	baseURL    *url.URL
+	apiKey     string
+	isPaidPlan bool
 }
 
-func NewV049Client(ctx context.Context, rawBaseURL string, apiKey string) (*MetabaseV049Client, error) {
+func NewV049Client(ctx context.Context, rawBaseURL string, apiKey string, isPaidPlan bool) (*MetabaseV049Client, error) {
 	client, err := uhttp.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -52,9 +87,10 @@ func NewV049Client(ctx context.Context, rawBaseURL string, apiKey string) (*Meta
 	}
 
 	return &MetabaseV049Client{
-		client:  httpClient,
-		baseURL: baseURL,
-		apiKey:  apiKey,
+		client:     httpClient,
+		baseURL:    baseURL,
+		apiKey:     apiKey,
+		isPaidPlan: isPaidPlan,
 	}, nil
 }
 
@@ -148,4 +184,21 @@ func (c *MetabaseV049Client) GetDBPermissions(ctx context.Context, dbID string) 
 	}
 
 	return dbPermissions.Groups, rateLimitDesc, nil
+}
+
+func (c *MetabaseV049Client) GetVersion(ctx context.Context) (*VersionInfo, *v2.RateLimitDescription, error) {
+	var utilInfo VersionInfo
+
+	queryUrl := c.baseURL.JoinPath(getVersion)
+
+	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &utilInfo, nil)
+	if err != nil {
+		return nil, rateLimitDesc, fmt.Errorf("failed to fetch Metabase version: %w", err)
+	}
+
+	return &utilInfo, rateLimitDesc, nil
+}
+
+func (c *MetabaseV049Client) IsPaidPlan() bool {
+	return c.isPaidPlan
 }

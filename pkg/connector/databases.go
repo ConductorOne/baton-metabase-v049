@@ -100,15 +100,22 @@ func (d *databaseBuilder) Grants(ctx context.Context, resource *v2.Resource, _ *
 			},
 		}
 
+		entitlementIDs := []string{
+			fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, groupIDStr, baseConnector.MemberPermission),
+		}
+
+		if d.client.IsPaidPlan() {
+			entitlementIDs = append(entitlementIDs,
+				fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, groupIDStr, baseConnector.ManagerPermission),
+			)
+		}
+
 		if permissions.Data != nil {
 			grants = append(grants, grant.NewGrant(resource,
 				accessPermission,
 				groupResource,
 				grant.WithAnnotation(&v2.GrantExpandable{
-					EntitlementIds: []string{
-						fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, groupIDStr, baseConnector.MemberPermission),
-						fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, groupIDStr, baseConnector.ManagerPermission),
-					},
+					EntitlementIds: entitlementIDs,
 				}),
 			))
 
@@ -118,10 +125,7 @@ func (d *databaseBuilder) Grants(ctx context.Context, resource *v2.Resource, _ *
 					writePermission,
 					groupResource,
 					grant.WithAnnotation(&v2.GrantExpandable{
-						EntitlementIds: []string{
-							fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, groupIDStr, baseConnector.MemberPermission),
-							fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, groupIDStr, baseConnector.ManagerPermission),
-						},
+						EntitlementIds: entitlementIDs,
 					}),
 				))
 			}

@@ -33,6 +33,10 @@ If Metabase is running on a server with domain metabase.customer.com and port 44
 
    Requires a base URL and an API Key. Args: --metabase-base-url, --metabase-api-key
 
+   There is also the --metabase-with-paid-plan flag, to determine whether the connector is using the free open source version or a paid version of Metabase, 
+   which will add the group_manager permission that makes sense in paid versions because it is not allowed to use it for free.
+   By default, the flag is false.
+
    The required URL was defined in the connector requirements instructions
    To obtain the API key follow the next steps:
     1. In your Metabase address where the open source version was launched, click on the gear icon in the upper right section and click on admin settings:

@@ -7,9 +7,12 @@ import (
 	"testing"
 
 	"github.com/conductorone/baton-metabase-v049/pkg/client"
+	baseConnector "github.com/conductorone/baton-metabase/pkg/connector"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func newTestDatabaseBuilder() (*databaseBuilder, *client.MockService) {
@@ -83,6 +86,17 @@ func TestDatabasesGrants(t *testing.T) {
 		require.NotEmpty(t, ann)
 	})
 
+	t.Run("should return error if GetDBPermissions fails", func(t *testing.T) {
+		dbBuilder, mockClient := newTestDatabaseBuilder()
+		mockClient.GetDBPermissionsFunc = func(ctx context.Context, dbID string) (map[string]map[string]*client.GroupPermission, *v2.RateLimitDescription, error) {
+			return nil, nil, fmt.Errorf("API error")
+		}
+
+		_, _, _, err := dbBuilder.Grants(ctx, dbResource, &pagination.Token{})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "API error")
+	})
+
 	t.Run("should return access and write grants correctly", func(t *testing.T) {
 		dbBuilder, mockClient := newTestDatabaseBuilder()
 		mockClient.GetDBPermissionsFunc = func(ctx context.Context, dbID string) (map[string]map[string]*client.GroupPermission, *v2.RateLimitDescription, error) {
@@ -122,14 +136,31 @@ func TestDatabasesGrants(t *testing.T) {
 		require.False(t, g4Write)
 	})
 
-	t.Run("should return error if GetDBPermissions fails", func(t *testing.T) {
+	t.Run("should include manager entitlement if paid plan", func(t *testing.T) {
 		dbBuilder, mockClient := newTestDatabaseBuilder()
+		mockClient.IsPaidPlanFunc = func() bool { return true }
 		mockClient.GetDBPermissionsFunc = func(ctx context.Context, dbID string) (map[string]map[string]*client.GroupPermission, *v2.RateLimitDescription, error) {
-			return nil, nil, fmt.Errorf("API error")
+			return map[string]map[string]*client.GroupPermission{
+				"group5": {"1": {Data: &client.DataAccessDetails{NativePermission: "write"}}},
+			}, nil, nil
 		}
 
-		_, _, _, err := dbBuilder.Grants(ctx, dbResource, &pagination.Token{})
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "API error")
+		grants, _, ann, err := dbBuilder.Grants(ctx, dbResource, &pagination.Token{})
+		require.NoError(t, err)
+		require.Empty(t, ann)
+
+		var entitlementIDs []string
+		for _, g := range grants {
+			if g.Principal.Id.Resource != "group5" {
+				continue
+			}
+			for _, ann := range g.Annotations {
+				expandable := &v2.GrantExpandable{}
+				if err := anypb.UnmarshalTo(ann, expandable, proto.UnmarshalOptions{}); err == nil {
+					entitlementIDs = append(entitlementIDs, expandable.EntitlementIds...)
+				}
+			}
+		}
+		require.Contains(t, entitlementIDs, fmt.Sprintf("%s:%s:%s", baseConnector.GroupResourceType.Id, "group5", baseConnector.ManagerPermission))
 	})
 }

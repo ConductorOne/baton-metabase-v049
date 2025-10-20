@@ -4,8 +4,9 @@ package config
 import "reflect"
 
 type MetabaseV049 struct {
-	MetabaseBaseUrl string `mapstructure:"metabase-base-url"`
-	MetabaseApiKey  string `mapstructure:"metabase-api-key"`
+	MetabaseBaseUrl      string `mapstructure:"metabase-base-url"`
+	MetabaseApiKey       string `mapstructure:"metabase-api-key"`
+	MetabaseWithPaidPlan bool   `mapstructure:"metabase-with-paid-plan"`
 }
 
 func (c *MetabaseV049) findFieldByTag(tagValue string) (any, bool) {

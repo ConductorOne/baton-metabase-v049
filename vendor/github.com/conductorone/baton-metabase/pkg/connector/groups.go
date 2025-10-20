@@ -48,24 +48,22 @@ func (g *groupBuilder) List(ctx context.Context, _ *v2.ResourceId, _ *pagination
 	return outResources, "", ann, nil
 }
 
-var roles = []struct {
-	ID          string
-	DisplayName string
-}{
-	{ID: MemberPermission, DisplayName: "Member"},
-	{ID: ManagerPermission, DisplayName: "Manager"},
-}
-
 func (g *groupBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
 	var rv []*v2.Entitlement
-	for _, role := range roles {
+	opts := []entitlement.EntitlementOption{
+		entitlement.WithGrantableTo(UserResourceType),
+		entitlement.WithDisplayName(fmt.Sprintf("%s %s", resource.DisplayName, "Member")),
+		entitlement.WithDescription(fmt.Sprintf("Is a %s of %s group in Metabase", "Member", resource.DisplayName)),
+	}
+	rv = append(rv, entitlement.NewAssignmentEntitlement(resource, MemberPermission, opts...))
+
+	if g.client.IsPaidPlan() {
 		opts := []entitlement.EntitlementOption{
 			entitlement.WithGrantableTo(UserResourceType),
-			entitlement.WithDisplayName(fmt.Sprintf("%s %s", resource.DisplayName, role.DisplayName)),
-			entitlement.WithDescription(fmt.Sprintf("Is a %s of %s group in Metabase", role.DisplayName, resource.DisplayName)),
+			entitlement.WithDisplayName(fmt.Sprintf("%s %s", resource.DisplayName, "Manager")),
+			entitlement.WithDescription(fmt.Sprintf("Is a %s of %s group in Metabase", "Manager", resource.DisplayName)),
 		}
-		ent := entitlement.NewAssignmentEntitlement(resource, role.ID, opts...)
-		rv = append(rv, ent)
+		rv = append(rv, entitlement.NewAssignmentEntitlement(resource, ManagerPermission, opts...))
 	}
 
 	return rv, "", nil, nil
