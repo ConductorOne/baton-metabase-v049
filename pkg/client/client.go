@@ -180,7 +180,7 @@ func (c *MetabaseV049Client) GetDBPermissions(ctx context.Context, dbID string) 
 
 	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &dbPermissions, nil)
 	if err != nil {
-		return nil, rateLimitDesc, fmt.Errorf("failed to fetch databases permissions %s: %w", dbID, err)
+		return nil, rateLimitDesc, fmt.Errorf("failed to fetch database permissions %s: %w", dbID, err)
 	}
 
 	return dbPermissions.Groups, rateLimitDesc, nil
