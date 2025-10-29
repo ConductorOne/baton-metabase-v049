@@ -25,7 +25,7 @@ const (
 	// https://www.metabase.com/docs/latest/api#tag/apisetting/get/api/setting/{key}
 	getVersion = "/api/setting/version"
 
-	// https://www.metabase.com/docs/latest/api#tag/apidatabase/post/api/database/
+	// https://www.metabase.com/docs/latest/api#tag/apidatabase/get/api/database/
 	getDatabases = "/api/database"
 
 	// https://www.metabase.com/docs/latest/api#tag/apipermissions/get/api/permissions/graph/db/{db-id}
@@ -177,7 +177,7 @@ func (c *MetabaseV049Client) ListDatabases(ctx context.Context) ([]*Database, *v
 func (c *MetabaseV049Client) GetDBPermissions(ctx context.Context, dbID string) (map[string]map[string]*GroupPermission, *v2.RateLimitDescription, error) {
 	var dbPermissions DBPermissionGraph
 
-	queryUrl := c.baseURL.JoinPath(fmt.Sprintf(getDBPermissions, dbID))
+	queryUrl := c.baseURL.JoinPath(fmt.Sprintf(getDBPermissions, url.PathEscape(dbID)))
 
 	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &dbPermissions, nil)
 	if err != nil {
