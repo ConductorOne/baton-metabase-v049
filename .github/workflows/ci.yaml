@@ -114,9 +114,6 @@ jobs:
       - name: Export API key as env var
         run: echo "BATON_METABASE_API_KEY=${{ steps.api_key.outputs.api_key }}" >> $GITHUB_ENV
 
-      - name: Build baton-metabase-049
-        run: go build ./cmd/baton-metabase-v049
-
       - name: Create test group
         id: create_group
         run: |
@@ -142,24 +139,35 @@ jobs:
           USER_ID=$(echo "$USER_JSON" | jq -r '.id')
           echo "user_id=$USER_ID" >> $GITHUB_OUTPUT
 
-      - name: Add test user to group
-        run: |
-          curl -s -X POST "$BATON_METABASE_BASE_URL/api/permissions/membership" \
-            -H "Content-Type: application/json" \
-            -H "X-Metabase-Session: ${{ steps.login.outputs.session_id }}" \
-            -d '{
-                  "group_id": ${{ steps.create_group.outputs.group_id }},
-                  "user_id": ${{ steps.test_user.outputs.user_id }},
-                  "is_group_manager": false
-                }'
+      - name: Build baton-metabase-v049
+        run: go build ./cmd/baton-metabase-v049
 
       - name: Test syncing
-        uses: ConductorOne/github-workflows/actions/sync-test@v2
+        uses: ConductorOne/github-workflows/actions/sync-test@v3
         with:
           connector: ./baton-metabase-v049
           baton-entitlement: group:${{steps.create_group.outputs.group_id}}:member
           baton-principal: ${{steps.test_user.outputs.user_id}}
           baton-principal-type: 'user'
+
+      - name: Test Account Provisioning
+        uses: ConductorOne/github-workflows/actions/account-provisioning@v3
+        with:
+          connector: './baton-metabase-v049'
+          account-email: 'ci-user-provisioning@metabase.local'
+          account-profile: '{"first_name": "CI", "last_name": "User", "username": "ci-user", "email": "ci-user-provisioning@metabase.local"}'
+          account-type: 'user'
+          search-method: 'email'
+
+      - name: Test disable user action
+        run: |
+          ./baton-metabase-v049 --invoke-action=disable_user \
+            --invoke-action-args='{"userId": "${{ steps.test_user.outputs.user_id }}"}'
+
+      - name: Test enable user action
+        run: |
+          ./baton-metabase-v049 --invoke-action=enable_user \
+            --invoke-action-args='{"userId": "${{ steps.test_user.outputs.user_id }}"}'
 
       - name: Clean up
         if: always()

@@ -16,6 +16,10 @@ type PageOptions struct {
 
 type ReqOpt func(reqURL *url.URL)
 
+func withStatusAllParam() ReqOpt {
+	return withQueryParam("status", "all")
+}
+
 func withLimitParam(limit int) ReqOpt {
 	if limit <= 0 {
 		limit = ItemsPerPage

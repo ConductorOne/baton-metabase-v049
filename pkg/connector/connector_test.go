@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/conductorone/baton-metabase/pkg/client"
+	"github.com/conductorone/baton-metabase-v049/pkg/client"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/stretchr/testify/require"
 )
