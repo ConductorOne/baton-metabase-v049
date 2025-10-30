@@ -1,15 +1,20 @@
 name: ci
-on: pull_request
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches:
+      - main
 jobs:
   go-lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.25.x
-      - name: Checkout code
-        uses: actions/checkout@v4
+          go-version-file: go.mod
       - name: Run linters
         uses: golangci/golangci-lint-action@v8
         with:
@@ -18,61 +23,144 @@ jobs:
   go-test:
     strategy:
       matrix:
-        go-version: [1.25.x]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         if: success()
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v4
+          go-version-file: go.mod
       - name: go tests
-        run: (set -o pipefail && go test -v -covermode=count -json ./... | tee test.json)
+        run: go test -v -covermode=count -json ./... > test.json
       - name: annotate go tests
         if: always()
-        uses: guyarb/golang-test-annotations@v0.6.0
+        uses: guyarb/golang-test-annotations@v0.8.0
         with:
           test-results: test.json
 
   test:
     runs-on: ubuntu-latest
-    # Define any services needed for the test suite (or delete this section)
-    # services:
-    #   postgres:
-    #     image: postgres:16
-    #     ports:
-    #       - "5432:5432"
-    #     env:
-    #       POSTGRES_PASSWORD: secretpassword
     env:
       BATON_LOG_LEVEL: debug
-      # Add any environment variables needed to run baton-metabase-v049
-      # BATON_BASE_URL: 'http://localhost:8080'
-      # BATON_ACCESS_TOKEN: 'secret_token'
+      BATON_METABASE_BASE_URL: http://localhost:3000
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.25.x
-      - name: Checkout code
-        uses: actions/checkout@v4
-      # Install any dependencies here (or delete this)
-      # - name: Install postgres client
-      #   run: sudo apt install postgresql-client
-      # Run any fixture setup here (or delete this)
-      # - name: Import sql into postgres
-      #   run: psql -h localhost --user postgres -f environment.sql
-      #   env:
-      #     PGPASSWORD: secretpassword
-      - name: Build baton-metabase-v049
+          go-version-file: go.mod
+
+      - name: Set up Docker
+        run: |
+          docker pull metabase/metabase:v0.49.2
+
+      - name: Start Metabase
+        run: |
+          docker run -d -p 3000:3000 --name metabase-ci \
+            -e MB_DB_FILE=/metabase.db \
+            -v metabase-data-ci:/metabase.db \
+            metabase/metabase:v0.49.2
+          sleep 150
+
+      - name: Create CI Admin user
+        id: ci_admin
+        run: |
+          SETUP_TOKEN=$(curl -s $BATON_METABASE_BASE_URL/api/session/properties | jq -r '.["setup-token"]')
+          curl -s -X POST $BATON_METABASE_BASE_URL/api/setup \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "token": "'"$SETUP_TOKEN"'",
+                  "user": {
+                    "first_name": "CI",
+                    "last_name": "Admin",
+                    "email": "ci@metabase.local",
+                    "password": "Admin123!"
+                  },
+                  "prefs": {"site_name": "Metabase CI"},
+                  "database": null
+                }'
+
+      - name: Log in CI Admin
+        id: login
+        run: |
+          SESSION_ID=$(curl -s -X POST $BATON_METABASE_BASE_URL/api/session \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "username": "ci@metabase.local",
+                  "password": "Admin123!"
+                }' | jq -r '.id')
+          echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
+          sleep 5
+
+      - name: Create API Key
+        id: api_key
+        run: |
+          API_KEY_JSON=$(curl -s -X POST $BATON_METABASE_BASE_URL/api/api-key/ \
+            -H "Content-Type: application/json" \
+            -H "X-Metabase-Session: ${{ steps.login.outputs.session_id }}" \
+            -d '{
+                  "group_id": 2,
+                  "name": "CI Key",
+                  "return_key": true
+                }')
+          API_KEY=$(echo "$API_KEY_JSON" | jq -r '.unmasked_key')
+          echo "api_key=$API_KEY" >> $GITHUB_OUTPUT
+
+      - name: Export API key as env var
+        run: echo "BATON_METABASE_API_KEY=${{ steps.api_key.outputs.api_key }}" >> $GITHUB_ENV
+
+      - name: Build baton-metabase-049
         run: go build ./cmd/baton-metabase-v049
+
+      - name: Create test group
+        id: create_group
+        run: |
+          GROUP_JSON=$(curl -s -X POST $BATON_METABASE_BASE_URL/api/permissions/group \
+            -H "Content-Type: application/json" \
+            -H "X-Metabase-Session: ${{ steps.login.outputs.session_id }}" \
+            -d '{"name": "group-ci"}')
+          GROUP_ID=$(echo "$GROUP_JSON" | jq -r '.id')
+          echo "group_id=$GROUP_ID" >> $GITHUB_OUTPUT
+
+      - name: Create test user
+        id: test_user
+        run: |
+          USER_JSON=$(curl -s -X POST $BATON_METABASE_BASE_URL/api/user \
+            -H "Content-Type: application/json" \
+            -H "X-Metabase-Session: ${{ steps.login.outputs.session_id }}" \
+            -d '{
+                  "first_name": "CI",
+                  "last_name": "User",
+                  "email": "ci-user@metabase.local",
+                  "password": "Admin123!"
+                }')
+          USER_ID=$(echo "$USER_JSON" | jq -r '.id')
+          echo "user_id=$USER_ID" >> $GITHUB_OUTPUT
+
+      - name: Add test user to group
+        run: |
+          curl -s -X POST "$BATON_METABASE_BASE_URL/api/permissions/membership" \
+            -H "Content-Type: application/json" \
+            -H "X-Metabase-Session: ${{ steps.login.outputs.session_id }}" \
+            -d '{
+                  "group_id": ${{ steps.create_group.outputs.group_id }},
+                  "user_id": ${{ steps.test_user.outputs.user_id }},
+                  "is_group_manager": false
+                }'
+
       - name: Test syncing
         uses: ConductorOne/github-workflows/actions/sync-test@v2
         with:
           connector: ./baton-metabase-v049
-          baton-entitlement: 'entitlement:group:1234:member'
-          baton-principal: 'user:9876'
+          baton-entitlement: group:${{steps.create_group.outputs.group_id}}:member
+          baton-principal: ${{steps.test_user.outputs.user_id}}
           baton-principal-type: 'user'
+
+      - name: Clean up
+        if: always()
+        run: docker rm -f metabase-ci || true

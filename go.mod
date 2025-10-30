@@ -3,6 +3,7 @@ module github.com/conductorone/baton-metabase-v049
 go 1.25.2
 
 require (
+	github.com/conductorone/baton-metabase v0.0.4
 	github.com/conductorone/baton-sdk v0.4.10
 	github.com/ennyjfrick/ruleguard-logfatal v0.0.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0

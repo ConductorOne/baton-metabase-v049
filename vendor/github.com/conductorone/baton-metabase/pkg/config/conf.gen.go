@@ -3,13 +3,13 @@ package config
 
 import "reflect"
 
-type MetabaseV049 struct {
+type Metabase struct {
 	MetabaseBaseUrl      string `mapstructure:"metabase-base-url"`
 	MetabaseApiKey       string `mapstructure:"metabase-api-key"`
 	MetabaseWithPaidPlan bool   `mapstructure:"metabase-with-paid-plan"`
 }
 
-func (c *MetabaseV049) findFieldByTag(tagValue string) (any, bool) {
+func (c *Metabase) findFieldByTag(tagValue string) (any, bool) {
 	v := reflect.ValueOf(c).Elem() // Dereference pointer to struct
 	t := v.Type()
 
@@ -24,7 +24,7 @@ func (c *MetabaseV049) findFieldByTag(tagValue string) (any, bool) {
 	return nil, false
 }
 
-func (c *MetabaseV049) GetStringSlice(fieldName string) []string {
+func (c *Metabase) GetStringSlice(fieldName string) []string {
 	v, ok := c.findFieldByTag(fieldName)
 	if !ok {
 		return []string{}
@@ -36,7 +36,7 @@ func (c *MetabaseV049) GetStringSlice(fieldName string) []string {
 	return t
 }
 
-func (c *MetabaseV049) GetString(fieldName string) string {
+func (c *Metabase) GetString(fieldName string) string {
 	v, ok := c.findFieldByTag(fieldName)
 	if !ok {
 		return ""
@@ -48,7 +48,7 @@ func (c *MetabaseV049) GetString(fieldName string) string {
 	return t
 }
 
-func (c *MetabaseV049) GetInt(fieldName string) int {
+func (c *Metabase) GetInt(fieldName string) int {
 	v, ok := c.findFieldByTag(fieldName)
 	if !ok {
 		return 0
@@ -60,7 +60,7 @@ func (c *MetabaseV049) GetInt(fieldName string) int {
 	return t
 }
 
-func (c *MetabaseV049) GetBool(fieldName string) bool {
+func (c *Metabase) GetBool(fieldName string) bool {
 	v, ok := c.findFieldByTag(fieldName)
 	if !ok {
 		return false
@@ -72,7 +72,7 @@ func (c *MetabaseV049) GetBool(fieldName string) bool {
 	return t
 }
 
-func (c *MetabaseV049) GetStringMap(fieldName string) map[string]any {
+func (c *Metabase) GetStringMap(fieldName string) map[string]any {
 	v, ok := c.findFieldByTag(fieldName)
 	if !ok {
 		return map[string]any{}
