@@ -12,6 +12,7 @@ import (
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/uhttp"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 )
 
 const (
@@ -28,11 +29,23 @@ const (
 	// https://www.metabase.com/docs/latest/api#tag/apiuser/get/api/user/
 	getUsers = "/api/user"
 
+	// https://www.metabase.com/docs/latest/api#tag/apiuser/post/api/user/
+	createUser = "/api/user"
+
+	// https://www.metabase.com/docs/latest/api#tag/apiuser/put/api/user/{id}/reactivate
+	activateUser = "/api/user/%s/reactivate"
+
+	// https://www.metabase.com/docs/latest/api#tag/apiuser/delete/api/user/{id}
+	deactivateUser = "/api/user/%s"
+
 	// https://www.metabase.com/docs/latest/api#tag/apipermissions/post/api/permissions/membership
 	getMemberships = "/api/permissions/membership"
 
-	// https://www.metabase.com/docs/latest/api#tag/apisetting/get/api/setting/{key}
-	getVersion = "/api/setting/version"
+	// https://www.metabase.com/docs/latest/api#tag/apipermissions/post/api/permissions/membership
+	addUserToGroup = "/api/permissions/membership"
+
+	// https://www.metabase.com/docs/latest/api#tag/apipermissions/delete/api/permissions/membership/{id}
+	removeUserFromGroup = "/api/permissions/membership/%s"
 )
 
 type MetabaseClient struct {
@@ -43,6 +56,8 @@ type MetabaseClient struct {
 }
 
 func New(ctx context.Context, rawBaseURL string, apiKey string, isPaidPlan bool) (*MetabaseClient, error) {
+	l := ctxzap.Extract(ctx)
+
 	client, err := uhttp.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -56,6 +71,10 @@ func New(ctx context.Context, rawBaseURL string, apiKey string, isPaidPlan bool)
 	baseURL, err := url.Parse(rawBaseURL)
 	if err != nil {
 		return nil, err
+	}
+
+	if baseURL.Scheme != "https" {
+		l.Warn("Metabase connector is using HTTP. Make sure this instance is running in a trusted or on-premise environment.")
 	}
 
 	return &MetabaseClient{
@@ -135,7 +154,10 @@ func (c *MetabaseClient) ListUsers(ctx context.Context, options PageOptions) ([]
 
 	queryUrl := c.baseURL.JoinPath(getUsers)
 
-	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &res, nil, withLimitParam(options.Limit), withOffsetParam(options.Offset))
+	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &res, nil,
+		withLimitParam(options.Limit),
+		withOffsetParam(options.Offset),
+		withStatusAllParam())
 	if err != nil {
 		return nil, "", rateLimitDesc, fmt.Errorf("failed to fetch users: %w", err)
 	}
@@ -143,6 +165,41 @@ func (c *MetabaseClient) ListUsers(ctx context.Context, options PageOptions) ([]
 	nextToken := getNextPageToken(res.Offset, res.Limit, res.Total)
 
 	return res.Data, nextToken, rateLimitDesc, nil
+}
+
+func (c *MetabaseClient) CreateUser(ctx context.Context, request *CreateUserRequest) (*User, *v2.RateLimitDescription, error) {
+	queryUrl := c.baseURL.JoinPath(createUser)
+
+	var user User
+	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodPost, queryUrl, &user, request)
+	if err != nil {
+		return nil, rateLimitDesc, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	return &user, rateLimitDesc, nil
+}
+
+func (c *MetabaseClient) UpdateUserActiveStatus(ctx context.Context, userId string, active bool) (*User, *v2.RateLimitDescription, error) {
+	var (
+		queryUrl *url.URL
+		method   string
+	)
+
+	if active {
+		method = http.MethodPut
+		queryUrl = c.baseURL.JoinPath(fmt.Sprintf(activateUser, userId))
+	} else {
+		method = http.MethodDelete
+		queryUrl = c.baseURL.JoinPath(fmt.Sprintf(deactivateUser, userId))
+	}
+
+	var user User
+	_, rateLimitDesc, err := c.doRequest(ctx, method, queryUrl, &user, nil)
+	if err != nil {
+		return nil, rateLimitDesc, fmt.Errorf("failed to update user active status in Metabase: %w", err)
+	}
+
+	return &user, rateLimitDesc, nil
 }
 
 func (c *MetabaseClient) ListGroups(ctx context.Context) ([]*Group, *v2.RateLimitDescription, error) {
@@ -171,17 +228,26 @@ func (c *MetabaseClient) ListMemberships(ctx context.Context) (map[string][]*Mem
 	return membershipResponse, rateLimitDesc, nil
 }
 
-func (c *MetabaseClient) GetVersion(ctx context.Context) (*VersionInfo, *v2.RateLimitDescription, error) {
-	var utilInfo VersionInfo
+func (c *MetabaseClient) AddUserToGroup(ctx context.Context, request *Membership) (*v2.RateLimitDescription, error) {
+	queryUrl := c.baseURL.JoinPath(addUserToGroup)
 
-	queryUrl := c.baseURL.JoinPath(getVersion)
-
-	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &utilInfo, nil)
+	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodPost, queryUrl, nil, request)
 	if err != nil {
-		return nil, rateLimitDesc, fmt.Errorf("failed to fetch Metabase version: %w", err)
+		return rateLimitDesc, fmt.Errorf("failed to add user %d to group %d: %w", request.UserID, request.GroupID, err)
 	}
 
-	return &utilInfo, rateLimitDesc, nil
+	return rateLimitDesc, nil
+}
+
+func (c *MetabaseClient) RemoveUserFromGroup(ctx context.Context, membershipID string) (*v2.RateLimitDescription, error) {
+	queryUrl := c.baseURL.JoinPath(fmt.Sprintf(removeUserFromGroup, membershipID))
+
+	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodDelete, queryUrl, nil, nil)
+	if err != nil {
+		return rateLimitDesc, fmt.Errorf("failed to remove membership %s from group: %w", membershipID, err)
+	}
+
+	return rateLimitDesc, nil
 }
 
 func (c *MetabaseClient) IsPaidPlan() bool {
