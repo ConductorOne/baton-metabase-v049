@@ -19,7 +19,8 @@
         ]
       },
       "capabilities": [
-        "CAPABILITY_SYNC"
+        "CAPABILITY_SYNC",
+        "CAPABILITY_PROVISION"
       ]
     },
     {
@@ -31,12 +32,23 @@
         ]
       },
       "capabilities": [
-        "CAPABILITY_SYNC"
+        "CAPABILITY_SYNC",
+        "CAPABILITY_ACCOUNT_PROVISIONING"
       ]
     }
   ],
   "connectorCapabilities": [
-    "CAPABILITY_SYNC"
+    "CAPABILITY_PROVISION",
+    "CAPABILITY_SYNC",
+    "CAPABILITY_ACCOUNT_PROVISIONING",
+    "CAPABILITY_ACTIONS"
   ],
-  "credentialDetails": {}
+  "credentialDetails": {
+    "capabilityAccountProvisioning": {
+      "supportedCredentialOptions": [
+        "CAPABILITY_DETAIL_CREDENTIAL_OPTION_RANDOM_PASSWORD"
+      ],
+      "preferredCredentialOption": "CAPABILITY_DETAIL_CREDENTIAL_OPTION_RANDOM_PASSWORD"
+    }
+  }
 }
