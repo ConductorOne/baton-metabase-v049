@@ -1,10 +1,6 @@
 {
   "fields": [
     {
-      "name": "configField",
-      "stringField": {}
-    },
-    {
       "name": "log-level",
       "description": "The log level: debug, info, warn, error",
       "isOps": true,
@@ -17,6 +13,35 @@
       "description": "The timestamp indicating when debug-level logging should expire",
       "isOps": true,
       "stringField": {}
+    },
+    {
+      "name": "metabase-api-key",
+      "displayName": "API Key",
+      "description": "Metabase API Key",
+      "isRequired": true,
+      "isSecret": true,
+      "stringField": {
+        "rules": {
+          "isRequired": true
+        }
+      }
+    },
+    {
+      "name": "metabase-base-url",
+      "displayName": "Base URL",
+      "description": "Metabase Base URL e.g. https://metabase.example.com",
+      "isRequired": true,
+      "stringField": {
+        "rules": {
+          "isRequired": true
+        }
+      }
+    },
+    {
+      "name": "metabase-with-paid-plan",
+      "displayName": "Metabase with paid plan",
+      "description": "Set to true if using Metabase paid plan, false for Open Source / self-hosted (free)",
+      "boolField": {}
     },
     {
       "name": "otel-collector-endpoint",
@@ -55,5 +80,7 @@
       "boolField": {}
     }
   ],
-  "displayName": "Metabase V049"
+  "displayName": "Metabase-v049",
+  "helpUrl": "/docs/baton/metabase",
+  "iconUrl": "/static/app-icons/metabase.svg"
 }
