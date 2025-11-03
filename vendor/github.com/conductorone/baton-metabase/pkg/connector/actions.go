@@ -6,6 +6,8 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	config "github.com/conductorone/baton-sdk/pb/c1/config/v1"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -108,20 +110,37 @@ func (c *Connector) EnableUser(ctx context.Context, args *structpb.Struct) (*str
 		return nil, nil, fmt.Errorf("userId cannot be empty")
 	}
 
-	l.Info("enabling user", zap.String("userId", userIdStr))
-
-	updatedUser, rateLimitDesc, err := c.client.UpdateUserActiveStatus(ctx, userIdStr, true)
+	var rateLimitDesc *v2.RateLimitDescription
+	var success bool
+	user, rateLimitDesc, err := c.client.GetUserByID(ctx, userIdStr)
 	if rateLimitDesc != nil {
 		ann.WithRateLimiting(rateLimitDesc)
 	}
 	if err != nil {
-		l.Error("failed to enable user", zap.String("userId", userIdStr), zap.Error(err))
-		return nil, ann, fmt.Errorf("failed to enable user %s: %w", userIdStr, err)
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			l.Info("GetUserByID returned 404: endpoint does not return inactive/disabled users; this is expected behavior when the user is disabled in Metabase",
+				zap.String("userId", userIdStr))
+			success = false
+		} else {
+			return nil, ann, fmt.Errorf("failed to fetch user %s: %w", userIdStr, err)
+		}
+	} else {
+		success = user.IsActive
 	}
 
-	success := updatedUser.IsActive
 	if !success {
-		l.Warn("user enable operation completed but user is still inactive", zap.String("userId", userIdStr), zap.Bool("active", updatedUser.IsActive))
+		l.Info("enabling user", zap.String("userId", userIdStr))
+		user, rateLimitDesc, err = c.client.UpdateUserActiveStatus(ctx, userIdStr, true)
+		if rateLimitDesc != nil {
+			ann.WithRateLimiting(rateLimitDesc)
+		}
+		if err != nil {
+			return nil, ann, fmt.Errorf("failed to enable user %s: %w", userIdStr, err)
+		}
+		success = user.IsActive
+		if !success {
+			l.Warn("user enable operation completed but user is still inactive", zap.String("userId", userIdStr), zap.Bool("active", user.IsActive))
+		}
 	}
 
 	response := &structpb.Struct{
@@ -129,6 +148,7 @@ func (c *Connector) EnableUser(ctx context.Context, args *structpb.Struct) (*str
 			"success": structpb.NewBoolValue(success),
 		},
 	}
+
 	return response, ann, nil
 }
 

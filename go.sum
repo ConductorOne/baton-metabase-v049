@@ -60,8 +60,8 @@ github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyY
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
-github.com/conductorone/baton-metabase v0.0.6 h1:XJ/ukwDcXC+vXT8AilgXh8ovnBPkAGrMTk27XSF3geQ=
-github.com/conductorone/baton-metabase v0.0.6/go.mod h1:XiPxEGQ3M+mdkjJ+5fDNl+PywD3yYJ9F1oDrtdIfeFM=
+github.com/conductorone/baton-metabase v0.0.7 h1:EMKCs59ZjdoKpegaQUBKetT+TKdGcSi3AfSntd82F3M=
+github.com/conductorone/baton-metabase v0.0.7/go.mod h1:XiPxEGQ3M+mdkjJ+5fDNl+PywD3yYJ9F1oDrtdIfeFM=
 github.com/conductorone/baton-sdk v0.5.6 h1:fNetYuy2xN+MEjypxKBIrn1HQd5yrNUg9mBxBvgaM0c=
 github.com/conductorone/baton-sdk v0.5.6/go.mod h1:TQuaFYyonGW1Xblxjm+qQE3XsJGAZvTMPGaO4c4Yv6E=
 github.com/conductorone/dpop v0.2.3 h1:s91U3845GHQ6P6FWrdNr2SEOy1ES/jcFs1JtKSl2S+o=
