@@ -29,6 +29,9 @@ const (
 	// https://www.metabase.com/docs/latest/api#tag/apiuser/get/api/user/
 	getUsers = "/api/user"
 
+	// https://www.metabase.com/docs/latest/api#tag/apiuser/get/api/user/{id}
+	getUserByID = "/api/user"
+
 	// https://www.metabase.com/docs/latest/api#tag/apiuser/post/api/user/
 	createUser = "/api/user"
 
@@ -179,7 +182,19 @@ func (c *MetabaseClient) CreateUser(ctx context.Context, request *CreateUserRequ
 	return &user, rateLimitDesc, nil
 }
 
-func (c *MetabaseClient) UpdateUserActiveStatus(ctx context.Context, userId string, active bool) (*User, *v2.RateLimitDescription, error) {
+func (c *MetabaseClient) GetUserByID(ctx context.Context, userID string) (*User, *v2.RateLimitDescription, error) {
+	queryUrl := c.baseURL.JoinPath(getUserByID, url.PathEscape(userID))
+
+	var user User
+	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodGet, queryUrl, &user, nil)
+	if err != nil {
+		return nil, rateLimitDesc, fmt.Errorf("failed to fetch user by ID %s: %w", userID, err)
+	}
+
+	return &user, rateLimitDesc, nil
+}
+
+func (c *MetabaseClient) UpdateUserActiveStatus(ctx context.Context, userID string, active bool) (*User, *v2.RateLimitDescription, error) {
 	var (
 		queryUrl *url.URL
 		method   string
@@ -187,10 +202,10 @@ func (c *MetabaseClient) UpdateUserActiveStatus(ctx context.Context, userId stri
 
 	if active {
 		method = http.MethodPut
-		queryUrl = c.baseURL.JoinPath(fmt.Sprintf(activateUser, userId))
+		queryUrl = c.baseURL.JoinPath(fmt.Sprintf(activateUser, url.PathEscape(userID)))
 	} else {
 		method = http.MethodDelete
-		queryUrl = c.baseURL.JoinPath(fmt.Sprintf(deactivateUser, userId))
+		queryUrl = c.baseURL.JoinPath(fmt.Sprintf(deactivateUser, url.PathEscape(userID)))
 	}
 
 	var user User
@@ -240,7 +255,7 @@ func (c *MetabaseClient) AddUserToGroup(ctx context.Context, request *Membership
 }
 
 func (c *MetabaseClient) RemoveUserFromGroup(ctx context.Context, membershipID string) (*v2.RateLimitDescription, error) {
-	queryUrl := c.baseURL.JoinPath(fmt.Sprintf(removeUserFromGroup, membershipID))
+	queryUrl := c.baseURL.JoinPath(fmt.Sprintf(removeUserFromGroup, url.PathEscape(membershipID)))
 
 	_, rateLimitDesc, err := c.doRequest(ctx, http.MethodDelete, queryUrl, nil, nil)
 	if err != nil {
