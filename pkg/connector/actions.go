@@ -41,21 +41,23 @@ func (c *Connector) EnableUserV049(ctx context.Context, args *structpb.Struct) (
 		ann.WithRateLimiting(rateLimitDesc)
 	}
 	if err != nil {
+		// GetUserByID only retrieves enabled users.
+		// If the user is disabled in Metabase, the API returns a 404 (NotFound),
+		// so we treat this as a signal to re-enable the user instead of a real "not found" error.
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
-			l.Info("user not found (inactive), enabling", zap.String("userId", userId))
 			resp, ann2, err := c.vBaseConnector.EnableUser(ctx, args)
 			if err != nil {
 				return nil, ann, fmt.Errorf("failed to enable user %s: %w", userId, err)
 			}
 			if ann2 != nil {
-				ann = ann2
+				ann.Merge(ann2...)
 			}
 			return resp, ann, nil
 		}
 		return nil, ann, fmt.Errorf("failed to fetch user %s: %w", userId, err)
 	}
 
-	l.Info("user already active, skipping enable", zap.String("userId", userId))
+	l.Debug("user already active, skipping enable", zap.String("userId", userId))
 	return &structpb.Struct{
 		Fields: map[string]*structpb.Value{
 			"success": structpb.NewBoolValue(true),
@@ -72,22 +74,28 @@ func (c *Connector) DisableUserV049(ctx context.Context, args *structpb.Struct) 
 	if rateLimitDesc != nil {
 		ann.WithRateLimiting(rateLimitDesc)
 	}
-
 	if err != nil {
+		// GetUserByID only retrieves enabled users.
+		// If the user is disabled in Metabase, the API returns a 404 (NotFound),
+		// In that case, the user is already disabled, so we skip the operation and return success.
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
-			l.Info("user not found (already disabled), skipping disable", zap.String("userId", userId))
+			l.Debug("user not found (already disabled), skipping disable", zap.String("userId", userId))
+			return &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"success": structpb.NewBoolValue(true),
+				},
+			}, ann, nil
 		}
 		return nil, ann, fmt.Errorf("failed to fetch user %s: %w", userId, err)
 	}
 
 	if user.IsActive {
-		l.Info("disabling active user", zap.String("userId", userId))
 		resp, ann2, err := c.vBaseConnector.DisableUser(ctx, args)
 		if err != nil {
 			return nil, ann2, fmt.Errorf("failed to disable user %s: %w", userId, err)
 		}
 		if ann2 != nil {
-			ann = ann2
+			ann.Merge(ann2...)
 		}
 		return resp, ann, nil
 	}
