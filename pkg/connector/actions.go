@@ -54,11 +54,11 @@ func (c *Connector) EnableUserV049(ctx context.Context, args *structpb.Struct) (
 		// so we treat this as a signal to re-enable the user instead of a real "not found" error.
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
 			resp, ann2, err := c.vBaseConnector.EnableUser(ctx, args)
-			if err != nil {
-				return nil, ann, fmt.Errorf("failed to enable user %s: %w", userId, err)
-			}
 			if ann2 != nil {
 				ann.Merge(ann2...)
+			}
+			if err != nil {
+				return nil, ann, fmt.Errorf("failed to enable user %s: %w", userId, err)
 			}
 			return resp, ann, nil
 		}
@@ -107,11 +107,11 @@ func (c *Connector) DisableUserV049(ctx context.Context, args *structpb.Struct) 
 
 	if user.IsActive {
 		resp, ann2, err := c.vBaseConnector.DisableUser(ctx, args)
-		if err != nil {
-			return nil, ann2, fmt.Errorf("failed to disable user %s: %w", userId, err)
-		}
 		if ann2 != nil {
 			ann.Merge(ann2...)
+		}
+		if err != nil {
+			return nil, ann, fmt.Errorf("failed to disable user %s: %w", userId, err)
 		}
 		return resp, ann, nil
 	}
