@@ -15,4 +15,5 @@ type ClientService interface {
 	UpdateUserActiveStatus(ctx context.Context, userId string, active bool) (*User, *v2.RateLimitDescription, error)
 	AddUserToGroup(ctx context.Context, request *Membership) (*v2.RateLimitDescription, error)
 	RemoveUserFromGroup(ctx context.Context, membershipID string) (*v2.RateLimitDescription, error)
+	GetUserByID(ctx context.Context, userID string) (*User, *v2.RateLimitDescription, error)
 }
