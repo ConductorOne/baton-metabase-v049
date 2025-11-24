@@ -62,8 +62,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/conductorone/baton-metabase v0.0.8 h1:EtphNmlXyQQu8NJNX9XN4jq4RW6iGGdB4uV5L31GJvc=
 github.com/conductorone/baton-metabase v0.0.8/go.mod h1:XiPxEGQ3M+mdkjJ+5fDNl+PywD3yYJ9F1oDrtdIfeFM=
-github.com/conductorone/baton-sdk v0.5.6 h1:fNetYuy2xN+MEjypxKBIrn1HQd5yrNUg9mBxBvgaM0c=
-github.com/conductorone/baton-sdk v0.5.6/go.mod h1:TQuaFYyonGW1Xblxjm+qQE3XsJGAZvTMPGaO4c4Yv6E=
+github.com/conductorone/baton-sdk v0.5.21 h1:9/x7wu6frktwe8qsqDkNgEU/XlAAeTAL7B1Hb+exbi4=
+github.com/conductorone/baton-sdk v0.5.21/go.mod h1:TQuaFYyonGW1Xblxjm+qQE3XsJGAZvTMPGaO4c4Yv6E=
 github.com/conductorone/dpop v0.2.3 h1:s91U3845GHQ6P6FWrdNr2SEOy1ES/jcFs1JtKSl2S+o=
 github.com/conductorone/dpop v0.2.3/go.mod h1:gyo8TtzB9SCFCsjsICH4IaLZ7y64CcrDXMOPBwfq/3s=
 github.com/conductorone/dpop/integrations/dpop_grpc v0.2.3 h1:kLMCNIh0Mo2vbvvkCmJ3ixsPbXEJ6HPcW53Ku9yje3s=
