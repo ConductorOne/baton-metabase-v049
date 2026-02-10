@@ -1,6 +1,6 @@
 ![Baton Logo](./baton-logo.png)
 
-# `baton-metabase-v049` [![Go Reference](https://pkg.go.dev/badge/github.com/conductorone/baton-metabase-v049.svg)](https://pkg.go.dev/github.com/conductorone/baton-metabase-v049) ![main ci](https://github.com/conductorone/baton-metabase-v049/actions/workflows/main.yaml/badge.svg)
+# `baton-metabase-v049` [![Go Reference](https://pkg.go.dev/badge/github.com/conductorone/baton-metabase-v049.svg)](https://pkg.go.dev/github.com/conductorone/baton-metabase-v049) ![ci](https://github.com/conductorone/baton-metabase-v049/actions/workflows/ci.yaml/badge.svg) ![verify](https://github.com/conductorone/baton-metabase-v049/actions/workflows/verify.yaml/badge.svg)
 
 `baton-metabase-v049` is a connector for built using the [Baton SDK](https://github.com/conductorone/baton-sdk).
 
@@ -33,7 +33,7 @@ If Metabase is running on a server with domain metabase.customer.com and port 44
 
    Requires a base URL and an API Key. Args: --metabase-base-url, --metabase-api-key
 
-   There is also the --metabase-with-paid-plan flag, to determine whether the connector is using the free open source version or a paid version of Metabase, 
+   There is also the --metabase-with-paid-plan flag, to determine whether the connector is using the free open source version or a paid version of Metabase,
    which will add the group_manager permission that makes sense in paid versions because it is not allowed to use it for free.
    By default, the flag is false.
 
