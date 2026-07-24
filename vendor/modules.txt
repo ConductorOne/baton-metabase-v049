@@ -277,7 +277,7 @@ github.com/cockroachdb/tokenbucket
 github.com/conductorone/baton-metabase/pkg/client
 github.com/conductorone/baton-metabase/pkg/config
 github.com/conductorone/baton-metabase/pkg/connector
-# github.com/conductorone/baton-sdk v0.20.1
+# github.com/conductorone/baton-sdk v0.20.2
 ## explicit; go 1.25.2
 github.com/conductorone/baton-sdk/internal/connector
 github.com/conductorone/baton-sdk/pb/c1/c1z/v1
